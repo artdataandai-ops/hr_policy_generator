@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hr-policy-backend
+    restart: unless-stopped
+    env_file:
+      # Holds LYZR_API_KEY / LYZR_AGENT_ID (gitignored, never baked into the image).
+      - ./backend/.env
+    ports:
+      - "127.0.0.1:8000:8000"
+    networks:
+      - hr-net
+
+networks:
+  hr-net:
+    driver: bridge
