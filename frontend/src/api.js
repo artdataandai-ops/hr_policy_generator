@@ -12,11 +12,19 @@ async function j(path, opts) {
   return r.json()
 }
 
-export const getAgent = () => j('/agent')
+// Index of all registered agents — for a landing grid / portal.
+export const getAgents = () => j('/agents')
 
-export const sendChat = (message, sessionId) =>
-  j('/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, session_id: sessionId }),
-  })
+// One agent's metadata, addressed by slug (the first URL path segment).
+export const getAgent = (slug) => j(`/${slug}/agent`)
+
+// Chat with optional file attachments. Always multipart/form-data so the backend
+// can extract document text / pass images through. Don't set Content-Type — the
+// browser adds the multipart boundary itself.
+export const sendChat = (slug, message, sessionId, files = []) => {
+  const fd = new FormData()
+  fd.append('message', message ?? '')
+  if (sessionId) fd.append('session_id', sessionId)
+  for (const f of files) fd.append('files', f, f.name)
+  return j(`/${slug}/chat`, { method: 'POST', body: fd })
+}

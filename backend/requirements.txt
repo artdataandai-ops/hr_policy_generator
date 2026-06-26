@@ -3,3 +3,12 @@ uvicorn[standard]>=0.29
 requests>=2.31
 python-dotenv>=1.0
 pydantic>=2.6
+python-multipart>=0.0.9
+
+# File-attachment text extraction (uploaded docs are converted to text server-side,
+# then embedded in the agent message — Lyzr's chat endpoint takes text, not files).
+pypdf>=4.2          # .pdf
+python-docx>=1.1    # .docx
+python-pptx>=0.6.23 # .pptx
+openpyxl>=3.1       # .xlsx
+xlrd>=2.0           # .xls (legacy Excel)

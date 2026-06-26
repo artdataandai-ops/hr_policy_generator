@@ -1,16 +1,18 @@
 """
-lyzr_client — calls the Lyzr **HR Policy Generator Manager** and its sub-agents.
+lyzr_client — calls Lyzr **Manager Agents** (and their sub-agents) for a registry
+of agent apps, all sharing one Lyzr API key.
 
-Architecture (4 agents, mirroring the kyc-kyb multi-agent setup):
-  • HR Policy Generator Manager  — the Manager Agent; orchestrates the 3 sub-agents.
-  • Policy Requirements Agent     — identifies the policy type + specific requirements.
-  • Compliance & Guidelines Agent — Perplexity-powered search for labor laws / best practices.
-  • Policy Drafting Agent         — combines requirements + compliance into the final document.
+This module is multi-tenant: every agent app is a slug-keyed entry in
+``agents.json`` (display metadata + the env-var names that hold its Lyzr ids).
+At import time we build a ``REGISTRY`` mapping ``slug -> {meta, manager_id,
+pipeline, allowlist}`` by resolving each ``*_env`` name via ``os.getenv``. The
+shared API key / inference url / user id stay server-side and never reach the
+browser.
 
-The Manager orchestrates the sub-agents inside Lyzr Studio, so the chat's default target
-is the manager. Like kyc-kyb, the proxy keeps the Lyzr API key server-side and validates
-every requested agent_id against an allowlist before forwarding (so a specific sub-agent
-can be addressed directly when needed, but nothing outside the allowlist).
+Each entry's Manager Agent orchestrates its sub-agents inside Lyzr Studio, so the
+default chat target for a slug is its manager. Like kyc-kyb, the proxy validates
+every requested agent_id against that slug's allowlist before forwarding (so a
+specific sub-agent can be addressed directly, but nothing outside the allowlist).
 
 Agent input  = the user's chat message.
 Agent output = { response: markdown, orchestration: [...sub-agent trace], session_id }.
@@ -24,76 +26,140 @@ try:
 except Exception:
     pass
 
+# ── Shared (workspace-wide) config ────────────────────────────────────────────
 LYZR_API_KEY = os.getenv("LYZR_API_KEY", "").strip()
 # v3 inference endpoint (current Lyzr Studio API) — same as kyc-kyb's LYZR_BASE_URL.
 LYZR_API_URL = os.getenv("LYZR_BASE_URL", os.getenv("LYZR_API_URL",
               "https://agent-prod.studio.lyzr.ai/v3/inference/chat/")).strip()
-LYZR_USER_ID = os.getenv("LYZR_USER_ID", "hr-policy@arttechgroup.demo").strip()
+LYZR_USER_ID = os.getenv("LYZR_USER_ID", "agents@arttechgroup.demo").strip()
 
-# The Manager Agent — the default chat target. (Legacy LYZR_AGENT_ID still honored.)
-MANAGER_AGENT_ID = os.getenv("LYZR_MANAGER_AGENT_ID", os.getenv("LYZR_AGENT_ID", "")).strip()
-
-# Specialized sub-agents the manager orchestrates. IDs feed the allowlist + the trace.
-PIPELINE = [
-    {"key": "requirements", "name": "Policy Requirements Agent",
-     "agent_id": os.getenv("LYZR_REQUIREMENTS_AGENT_ID", "").strip(),
-     "desc": "Interacts with the user to identify the policy type (leave, workplace conduct, "
-             "remote work/WFH, etc.) and any specific requirements."},
-    {"key": "compliance", "name": "Compliance & Guidelines Agent",
-     "agent_id": os.getenv("LYZR_COMPLIANCE_AGENT_ID", "").strip(),
-     "desc": "Uses Perplexity-powered search to retrieve current compliance requirements, "
-             "labor laws, and best practices related to the requested policy."},
-    {"key": "drafting", "name": "Policy Drafting Agent",
-     "agent_id": os.getenv("LYZR_DRAFTING_AGENT_ID", "").strip(),
-     "desc": "Generates the final HR policy by combining user requirements and compliance "
-             "guidelines into a professional, clear, and compliant HR document."},
-]
-
-MANAGER = {
-    "key": "manager", "name": "HR Policy Generator Agent", "agent_id": MANAGER_AGENT_ID,
-    "desc": "Coordinates the creation of HR policies by orchestrating specialized sub-agents. "
-            "Ensures the workflow captures user requirements, validates compliance guidelines, "
-            "and produces a finalized HR policy document.",
-}
+_AGENTS_JSON = os.path.join(os.path.dirname(__file__), "agents.json")
 
 
-def _allowlist() -> set[str]:
-    """Agent ids the proxy may forward to. Explicit LYZR_ALLOWED_AGENTS wins; otherwise the
-    4 configured ids (manager + sub-agents). Mirrors kyc-kyb's LYZR_ALLOWED_AGENTS."""
-    explicit = [a.strip() for a in os.getenv("LYZR_ALLOWED_AGENTS", "").split(",") if a.strip()]
-    if explicit:
-        return set(explicit)
-    return {a for a in [MANAGER_AGENT_ID, *(p["agent_id"] for p in PIPELINE)] if a}
+def _build_registry() -> dict:
+    """Load agents.json and resolve each agent's ids from the named env vars.
+
+    Returns slug -> {
+      "meta":      display metadata (ids stripped),  # safe to send to the browser
+      "manager_id": resolved id (may be "" if the env var is unset/blank),
+      "pipeline":  [{key, name, desc, agent_id}, ...],
+      "allowlist": {manager_id, *sub_ids} - {""},
+    }
+    """
+    with open(_AGENTS_JSON, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    registry: dict = {}
+    for slug, cfg in raw.items():
+        manager_id = os.getenv(cfg.get("manager_env", ""), "").strip()
+
+        pipeline = []
+        for p in cfg.get("pipeline", []) or []:
+            pipeline.append({
+                "key": p["key"],
+                "name": p["name"],
+                "desc": p.get("desc", ""),
+                "agent_id": os.getenv(p.get("agent_env", ""), "").strip(),
+            })
+
+        meta = {
+            "name": cfg["name"],
+            "short": cfg.get("short", ""),
+            "brand_name": cfg.get("brand_name", cfg["name"]),
+            "subtitle": cfg.get("subtitle", ""),
+            "description": cfg.get("description", ""),
+            "suggestions": cfg.get("suggestions", []),
+            # pipeline for the UI trace — names/descriptions only, no ids leaked.
+            "pipeline": [{"key": p["key"], "name": p["name"], "desc": p["desc"]} for p in pipeline],
+        }
+
+        allowlist = {a for a in [manager_id, *(p["agent_id"] for p in pipeline)] if a}
+
+        registry[slug] = {
+            "meta": meta,
+            "manager_id": manager_id,
+            "pipeline": pipeline,
+            "allowlist": allowlist,
+        }
+    return registry
 
 
-def is_configured() -> bool:
-    return bool(LYZR_API_KEY and MANAGER_AGENT_ID)
+REGISTRY = _build_registry()
+
+# Optional global escape hatch (kyc-kyb pattern): if set, these ids are allowed for
+# every slug in addition to its own derived ids. Leave blank to use per-slug ids only.
+_GLOBAL_ALLOWED = {a.strip() for a in os.getenv("LYZR_ALLOWED_AGENTS", "").split(",") if a.strip()}
 
 
-def is_allowed(agent_id: str) -> bool:
-    return agent_id in _allowlist()
+# ── Public, slug-aware helpers ────────────────────────────────────────────────
+def get_slugs() -> list[str]:
+    return list(REGISTRY.keys())
 
 
-def generate(message: str, session_id: str, agent_id: str | None = None) -> dict:
-    """Call an agent (default: the manager). Returns {response, orchestration, session_id}.
-    Raises on a disallowed agent_id or any network/HTTP error so the caller surfaces it."""
-    if not is_configured():
-        raise RuntimeError("Lyzr agent not configured (set LYZR_API_KEY and LYZR_MANAGER_AGENT_ID in backend/.env).")
+def has_slug(slug: str) -> bool:
+    return slug in REGISTRY
 
-    target = (agent_id or MANAGER_AGENT_ID).strip()
-    if not is_allowed(target):
-        raise PermissionError(f"agent_id '{target}' is not in the allowlist (LYZR_ALLOWED_AGENTS).")
+
+def get_meta(slug: str) -> dict:
+    """Display metadata for a slug (no ids). Raises KeyError on unknown slug."""
+    return REGISTRY[slug]["meta"]
+
+
+def is_configured(slug: str) -> bool:
+    """True when the shared key is set AND this slug's manager id is set."""
+    return bool(LYZR_API_KEY and REGISTRY.get(slug, {}).get("manager_id"))
+
+
+def _allowlist(slug: str) -> set[str]:
+    return REGISTRY[slug]["allowlist"] | _GLOBAL_ALLOWED
+
+
+def is_allowed(slug: str, agent_id: str) -> bool:
+    return agent_id in _allowlist(slug)
+
+
+def pipeline_meta(slug: str) -> list[dict]:
+    """The sub-agent trace shown in the UI (names + descriptions, no ids leaked)."""
+    return REGISTRY[slug]["meta"]["pipeline"]
+
+
+def generate(slug: str, message: str, session_id: str, agent_id: str | None = None,
+             images: list[dict] | None = None) -> dict:
+    """Call an agent for ``slug`` (default target: that slug's manager).
+    Returns {response, orchestration, session_id}. Raises on a disallowed agent_id
+    or any network/HTTP error so the caller surfaces it.
+
+    Document attachments are extracted to text upstream and folded into ``message``.
+    ``images`` (optional) is a list of {"name", "data_uri"} that we attach as an
+    OpenAI-style ``content`` array (the shape kyc-kyb uses) for multimodal agents."""
+    if not has_slug(slug):
+        raise KeyError(f"unknown agent slug '{slug}'")
+    if not is_configured(slug):
+        raise RuntimeError(
+            f"Lyzr agent '{slug}' not configured (set LYZR_API_KEY and its manager id in backend/.env)."
+        )
+
+    target = (agent_id or REGISTRY[slug]["manager_id"]).strip()
+    if not is_allowed(slug, target):
+        raise PermissionError(f"agent_id '{target}' is not in the allowlist for '{slug}'.")
+
+    payload = {
+        "user_id": LYZR_USER_ID,
+        "agent_id": target,
+        "session_id": session_id,
+        "message": message,
+    }
+    if images:
+        # Multimodal shape: a content array with the text plus each image as a data URI.
+        payload["content"] = [{"type": "text", "text": message}] + [
+            {"type": "image_url", "image_url": {"url": img["data_uri"]}} for img in images
+        ]
 
     import requests
     r = requests.post(
         LYZR_API_URL,
         headers={"x-api-key": LYZR_API_KEY, "Content-Type": "application/json"},
-        json={
-            "user_id": LYZR_USER_ID,
-            "agent_id": target,
-            "session_id": session_id,
-            "message": message,
-        },
+        json=payload,
         timeout=180,  # the manager fans out to several sub-agents — give them room.
     )
     r.raise_for_status()
@@ -104,7 +170,7 @@ def generate(message: str, session_id: str, agent_id: str | None = None) -> dict
 
     return {
         "response": _clean(text),
-        "orchestration": _extract_orchestration(data),
+        "orchestration": _extract_orchestration(slug, data),
         "session_id": session_id,
     }
 
@@ -118,16 +184,11 @@ def _clean(text: str) -> str:
     return t.strip()
 
 
-def _pipeline_meta() -> list[dict]:
-    """The sub-agent trace shown in the UI (names + descriptions, no ids leaked)."""
-    return [{"key": p["key"], "name": p["name"], "desc": p["desc"]} for p in PIPELINE]
-
-
-def _extract_orchestration(data: dict) -> list[dict]:
-    """Best-effort: surface real sub-agent activity if the manager reports it, else the known
-    pipeline. Lyzr manager responses may expose sub-agent runs under varying keys
-    (module_outputs / agents / tool_calls / steps) — we probe them defensively and fall back to
-    the static PIPELINE so the trace always renders."""
+def _extract_orchestration(slug: str, data: dict) -> list[dict]:
+    """Best-effort: surface real sub-agent activity if the manager reports it, else the
+    known pipeline. Lyzr manager responses may expose sub-agent runs under varying keys
+    (module_outputs / agents / tool_calls / steps) — we probe them defensively and fall
+    back to the slug's static pipeline so the trace always renders."""
     for key in ("module_outputs", "agents", "sub_agents", "steps", "tool_calls", "agent_outputs"):
         raw = data.get(key)
         items = list(raw.values()) if isinstance(raw, dict) else (raw if isinstance(raw, list) else None)
@@ -144,4 +205,4 @@ def _extract_orchestration(data: dict) -> list[dict]:
                 trace.append({"key": f"agent-{i}", "name": it[:60], "desc": "", "live": True})
         if trace:
             return trace
-    return _pipeline_meta()
+    return pipeline_meta(slug)

@@ -1,0 +1,159 @@
+{
+  "hr-policy": {
+    "name": "HR Policy Generator Agent",
+    "short": "HR",
+    "brand_name": "HR Policy Generator",
+    "subtitle": "Manager Agent",
+    "description": "Coordinates the creation of HR policies by orchestrating specialized sub-agents. Ensures the workflow captures user requirements, validates compliance guidelines, and produces a finalized HR policy document.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Generate an employee onboarding policy for new hires."},
+      {"icon": "book", "text": "Develop a policy for personal use of company devices."},
+      {"icon": "bolt", "text": "Create a policy on employee social media conduct, considering legal risks."},
+      {"icon": "code", "text": "Draft a grievance procedure policy for a remote-first organization."}
+    ],
+    "manager_env": "LYZR_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "requirements", "name": "Policy Requirements Agent",
+       "desc": "Interacts with the user to identify the policy type (leave, workplace conduct, remote work/WFH, etc.) and any specific requirements.",
+       "agent_env": "LYZR_REQUIREMENTS_AGENT_ID"},
+      {"key": "compliance", "name": "Compliance & Guidelines Agent",
+       "desc": "Uses Perplexity-powered search to retrieve current compliance requirements, labor laws, and best practices related to the requested policy.",
+       "agent_env": "LYZR_COMPLIANCE_AGENT_ID"},
+      {"key": "drafting", "name": "Policy Drafting Agent",
+       "desc": "Generates the final HR policy by combining user requirements and compliance guidelines into a professional, clear, and compliant HR document.",
+       "agent_env": "LYZR_DRAFTING_AGENT_ID"}
+    ]
+  },
+
+  "support-sentiment": {
+    "name": "Customer Support Sentiment & Insight Analyzer",
+    "short": "CS",
+    "brand_name": "Sentiment & Insight Analyzer",
+    "subtitle": "Customer Support",
+    "description": "Analyzes customer support conversations to surface sentiment, recurring themes, and actionable insights — turning raw tickets and chats into a clear read on customer experience.",
+    "suggestions": [
+      {"icon": "bolt", "text": "Analyze the sentiment of this customer support conversation."},
+      {"icon": "doc",  "text": "Summarize the top recurring complaints from these support tickets."},
+      {"icon": "book", "text": "Identify at-risk customers from these chat transcripts and explain why."},
+      {"icon": "code", "text": "Extract actionable insights and suggested next steps from this feedback."}
+    ],
+    "manager_env": "SUPPORT_SENTIMENT_AGENT_ID",
+    "pipeline": []
+  },
+
+  "hr-hiring": {
+    "name": "AI HR Hiring Manager",
+    "short": "HM",
+    "brand_name": "AI HR Hiring Manager",
+    "subtitle": "Manager Agent",
+    "description": "Runs the end-to-end hiring workflow — drafting job descriptions, defining evaluation criteria, and screening résumés against the role by orchestrating specialized sub-agents.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Write a job description for a Senior Backend Engineer."},
+      {"icon": "book", "text": "Define evaluation criteria for a Product Manager role."},
+      {"icon": "bolt", "text": "Evaluate this résumé against the attached job description."},
+      {"icon": "code", "text": "Create a scorecard to compare candidates for this position."}
+    ],
+    "manager_env": "HR_HIRING_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "job-description", "name": "Job Description Generator",
+       "desc": "Drafts a clear, role-specific job description from the hiring requirements.",
+       "agent_env": "JOB_DESCRIPTION_AGENT_ID"},
+      {"key": "evaluation-criteria", "name": "Evaluation Criteria Generator",
+       "desc": "Defines the skills, experience, and scoring criteria used to assess candidates.",
+       "agent_env": "EVALUATION_CRITERIA_AGENT_ID"},
+      {"key": "resume-evaluation", "name": "Resume Evaluation Agent",
+       "desc": "Screens and scores résumés against the job description and evaluation criteria.",
+       "agent_env": "RESUME_EVALUATION_AGENT_ID"}
+    ]
+  },
+
+  "sales-enablement": {
+    "name": "Sales Enablement Content Generator",
+    "short": "SE",
+    "brand_name": "Sales Enablement",
+    "subtitle": "Manager Agent",
+    "description": "Produces on-brand, persona-targeted sales content by orchestrating audience research, core messaging, content generation, and a final quality and consistency check.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Create a one-pager for our product aimed at CFOs."},
+      {"icon": "book", "text": "Build a value-proposition framework for mid-market buyers."},
+      {"icon": "bolt", "text": "Write a cold outreach sequence for VPs of Engineering."},
+      {"icon": "code", "text": "Draft a competitive battlecard against our top competitor."}
+    ],
+    "manager_env": "SALES_ENABLEMENT_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "audience-persona", "name": "Audience & Persona Insight Agent",
+       "desc": "Researches the target audience and builds the buyer-persona context for the content.",
+       "agent_env": "SALES_AUDIENCE_PERSONA_AGENT_ID"},
+      {"key": "messaging-framework", "name": "Core Messaging & Value Framework Agent",
+       "desc": "Defines the core messaging, positioning, and value framework for the asset.",
+       "agent_env": "SALES_MESSAGING_FRAMEWORK_AGENT_ID"},
+      {"key": "content-generation", "name": "Sales Content Generation Agent",
+       "desc": "Generates the actual sales content from the persona insight and messaging framework.",
+       "agent_env": "SALES_CONTENT_GENERATION_AGENT_ID"},
+      {"key": "quality-consistency", "name": "Content Quality and Consistency Agent",
+       "desc": "Reviews the draft for quality, brand voice, and consistency before finalizing.",
+       "agent_env": "SALES_CONTENT_QUALITY_AGENT_ID"}
+    ]
+  },
+
+  "rfp-proposal": {
+    "name": "RFP & Proposal Response Automation",
+    "short": "RFP",
+    "brand_name": "RFP & Proposal Response",
+    "subtitle": "Orchestrator Agent",
+    "description": "Automates RFP and proposal responses end-to-end — parsing the RFP, drafting technical and commercial responses, checking compliance and risk, and assuring overall response quality.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Parse this RFP and outline the required response structure."},
+      {"icon": "bolt", "text": "Draft the technical response section for the attached RFP."},
+      {"icon": "book", "text": "Review this proposal for compliance and risk issues."},
+      {"icon": "code", "text": "Generate a commercial and value summary for this bid."}
+    ],
+    "manager_env": "RFP_ORCHESTRATOR_AGENT_ID",
+    "pipeline": [
+      {"key": "parsing-structure", "name": "RFP Parsing & Structure Agent",
+       "desc": "Parses the RFP document and extracts the questions, requirements, and required structure.",
+       "agent_env": "RFP_PARSING_STRUCTURE_AGENT_ID"},
+      {"key": "technical-response", "name": "Technical Response Agent",
+       "desc": "Drafts the technical sections of the response to the RFP requirements.",
+       "agent_env": "RFP_TECHNICAL_RESPONSE_AGENT_ID"},
+      {"key": "commercial-value", "name": "Commercial & Value Agent",
+       "desc": "Builds the commercial, pricing, and value-proposition portions of the proposal.",
+       "agent_env": "RFP_COMMERCIAL_VALUE_AGENT_ID"},
+      {"key": "compliance-risk", "name": "Compliance & Risk Agent",
+       "desc": "Checks the response against RFP requirements and flags compliance and risk gaps.",
+       "agent_env": "RFP_COMPLIANCE_RISK_AGENT_ID"},
+      {"key": "response-quality", "name": "Response Quality Agent",
+       "desc": "Assures overall quality, coherence, and completeness of the final proposal.",
+       "agent_env": "RFP_RESPONSE_QUALITY_AGENT_ID"}
+    ]
+  },
+
+  "it-helpdesk": {
+    "name": "IT Helpdesk Agent",
+    "short": "IT",
+    "brand_name": "IT Helpdesk",
+    "subtitle": "Orchestrator Agent",
+    "description": "Resolves IT support requests end-to-end — searching the knowledge base, troubleshooting issues, raising tickets, and handling access requests by orchestrating specialized sub-agents.",
+    "suggestions": [
+      {"icon": "bolt", "text": "My laptop won't connect to the VPN — help me troubleshoot."},
+      {"icon": "doc",  "text": "Raise a ticket for a broken monitor at my desk."},
+      {"icon": "book", "text": "How do I reset my email password? Check the knowledge base."},
+      {"icon": "code", "text": "Request admin access to the analytics dashboard."}
+    ],
+    "manager_env": "IT_HELPDESK_ORCHESTRATOR_AGENT_ID",
+    "pipeline": [
+      {"key": "kb", "name": "KB Agent",
+       "desc": "Searches the knowledge base for existing articles and known solutions.",
+       "agent_env": "IT_KB_AGENT_ID"},
+      {"key": "troubleshooting", "name": "Troubleshooting Agent",
+       "desc": "Diagnoses the issue and walks the user through resolution steps.",
+       "agent_env": "IT_TROUBLESHOOTING_AGENT_ID"},
+      {"key": "ticket-generator", "name": "Ticket Generator Agent",
+       "desc": "Creates a structured support ticket when the issue needs to be escalated.",
+       "agent_env": "IT_TICKET_GENERATOR_AGENT_ID"},
+      {"key": "access-request", "name": "Access Request Agent",
+       "desc": "Handles access and permission requests for systems and applications.",
+       "agent_env": "IT_ACCESS_REQUEST_AGENT_ID"}
+    ]
+  }
+}

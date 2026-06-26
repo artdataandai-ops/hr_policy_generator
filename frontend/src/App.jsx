@@ -26,10 +26,10 @@ const titleFrom = (text) => {
   return t.length > 42 ? t.slice(0, 42) + '…' : t || 'New chat'
 }
 
-/* ---------- localStorage-backed session store ---------- */
-const LS = 'hrpolicy.sessions.v1'
-const loadSessions = () => {
-  try { return JSON.parse(localStorage.getItem(LS)) || [] } catch { return [] }
+/* ---------- localStorage-backed session store (namespaced per agent slug) ---------- */
+const lsKey = (slug) => `agents.${slug}.sessions.v1`
+const loadSessions = (slug) => {
+  try { return JSON.parse(localStorage.getItem(lsKey(slug))) || [] } catch { return [] }
 }
 const newSession = () => ({ id: uid(), title: 'New chat', messages: [], createdAt: Date.now() })
 
@@ -72,7 +72,7 @@ function Trace({ steps, running }) {
 function Welcome({ agent, onPick }) {
   return (
     <div className="welcome">
-      <h1 className="w-title">Welcome to {agent?.name || 'HR Policy Generator Agent'}</h1>
+      <h1 className="w-title">Welcome to {agent?.name || 'your AI agent'}</h1>
       <p className="w-desc">{agent?.description}</p>
       {agent?.suggestions?.length > 0 && (
         <>
@@ -91,30 +91,33 @@ function Welcome({ agent, onPick }) {
   )
 }
 
-export default function App() {
+export default function App({ slug }) {
   const [agent, setAgent] = useState(null)
   const [sessions, setSessions] = useState(() => {
-    const s = loadSessions()
+    const s = loadSessions(slug)
     return s.length ? s : [newSession()]
   })
   const [activeId, setActiveId] = useState(() => {
-    const s = loadSessions()
+    const s = loadSessions(slug)
     return (s[0]?.id) || null
   })
   const [input, setInput] = useState('')
+  const [files, setFiles] = useState([])
   const [sending, setSending] = useState(false)
   const [activeStep, setActiveStep] = useState(0)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const scrollRef = useRef(null)
   const taRef = useRef(null)
+  const fileRef = useRef(null)
 
   // ensure activeId points at a real session
   useEffect(() => {
     if (!activeId && sessions[0]) setActiveId(sessions[0].id)
   }, [activeId, sessions])
 
-  useEffect(() => { getAgent().then(setAgent).catch(() => setAgent(null)) }, [])
-  useEffect(() => { localStorage.setItem(LS, JSON.stringify(sessions)) }, [sessions])
+  useEffect(() => { getAgent(slug).then(setAgent).catch(() => setAgent(null)) }, [slug])
+  useEffect(() => { if (agent?.name) document.title = agent.name }, [agent])
+  useEffect(() => { localStorage.setItem(lsKey(slug), JSON.stringify(sessions)) }, [slug, sessions])
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
@@ -160,21 +163,24 @@ export default function App() {
 
   async function submit(text) {
     const message = (text ?? input).trim()
-    if (!message || sending || !active) return
+    const attached = files
+    if ((!message && attached.length === 0) || sending || !active) return
     setInput('')
+    setFiles([])
 
     const sid = active.id
-    const userMsg = { role: 'user', content: message }
+    const attachNames = attached.map((f) => f.name)
+    const userMsg = { role: 'user', content: message, attachments: attachNames }
     patchSession(sid, (s) => ({
       ...s,
-      title: s.messages.length === 0 ? titleFrom(message) : s.title,
+      title: s.messages.length === 0 ? titleFrom(message || attachNames[0] || 'New chat') : s.title,
       messages: [...s.messages, userMsg],
     }))
     setSending(true)
     setActiveStep(0)
 
     try {
-      const res = await sendChat(message, sid)
+      const res = await sendChat(slug, message, sid, attached)
       patchSession(sid, (s) => ({
         ...s,
         messages: [...s.messages, { role: 'assistant', content: res.response, orchestration: res.orchestration }],
@@ -203,7 +209,17 @@ export default function App() {
     setInput(el.value)
   }
 
+  function onPickFiles(e) {
+    const picked = Array.from(e.target.files || [])
+    if (picked.length) setFiles((prev) => [...prev, ...picked])
+    e.target.value = '' // let the same file be picked again later
+  }
+  function removeFile(idx) {
+    setFiles((prev) => prev.filter((_, i) => i !== idx))
+  }
+
   const connected = agent?.connected
+  const aiLabel = agent?.short || 'AI'
   const livePipeline = agent?.pipeline ? agent.pipeline.map((p) => ({ ...p })) : []
   livePipeline._active = activeStep
 
@@ -212,10 +228,10 @@ export default function App() {
       {/* ---------- sidebar ---------- */}
       <aside className="sidebar">
         <div className="brand">
-          <span className="dot">HR</span>
+          <span className="dot">{agent?.short || 'AI'}</span>
           <div className="brand-text">
-            <div className="brand-name">HR Policy Generator</div>
-            <div className="brand-desc">Manager Agent</div>
+            <div className="brand-name">{agent?.brand_name || agent?.name || 'AI Agent'}</div>
+            <div className="brand-desc">{agent?.subtitle || 'Agent'}</div>
           </div>
         </div>
 
@@ -246,7 +262,7 @@ export default function App() {
       {/* ---------- chat panel ---------- */}
       <main className="chat">
         <header className="chat-top">
-          <div className="ct-name">{agent?.name || 'HR Policy Generator Agent'}</div>
+          <div className="ct-name">{agent?.name || 'AI Agent'}</div>
           <span className={`status ${connected ? 'on' : 'off'}`}>
             <span className="status-dot" />{connected ? 'Agent connected' : agent ? 'Agent not connected' : 'Connecting…'}
           </span>
@@ -259,14 +275,28 @@ export default function App() {
             <div className="thread">
               {messages.map((m, i) => (
                 <div key={i} className={`msg ${m.role}`}>
-                  <div className="avatar">{m.role === 'user' ? 'You' : 'HR'}</div>
+                  <div className="avatar">{m.role === 'user' ? 'You' : aiLabel}</div>
                   <div className="bubble-wrap">
                     {m.role === 'assistant' && m.orchestration && <Trace steps={m.orchestration} running={false} />}
                     {m.error ? (
                       <div className="bubble err">{m.error}</div>
                     ) : (
                       <div className="bubble">
-                        {m.role === 'assistant' ? <Markdown text={m.content} /> : <div className="utext">{m.content}</div>}
+                        {m.role === 'assistant' ? <Markdown text={m.content} /> : (
+                          <div className="utext">
+                            {m.content}
+                            {m.attachments?.length > 0 && (
+                              <div className="msg-files">
+                                {m.attachments.map((name, k) => (
+                                  <span key={k} className="chip sm" title={name}>
+                                    <span className="chip-ico">{Ico.clip}</span>
+                                    <span className="chip-name">{name}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -275,10 +305,10 @@ export default function App() {
 
               {sending && (
                 <div className="msg assistant">
-                  <div className="avatar">HR</div>
+                  <div className="avatar">{aiLabel}</div>
                   <div className="bubble-wrap">
                     <Trace steps={livePipeline} running={true} />
-                    <div className="bubble thinking"><span className="spin" /> Generating policy…</div>
+                    <div className="bubble thinking"><span className="spin" /> Working…</div>
                   </div>
                 </div>
               )}
@@ -288,13 +318,33 @@ export default function App() {
 
         {!connected && agent && (
           <div className="banner">
-            ⚠ Agent not connected — set <code>LYZR_API_KEY</code> and <code>LYZR_AGENT_ID</code> in <code>backend/.env</code>, then restart the backend.
+            ⚠ Agent not connected — set <code>LYZR_API_KEY</code> and this agent's manager id in <code>backend/.env</code>, then restart the backend.
           </div>
         )}
 
         <div className="composer">
+          {files.length > 0 && (
+            <div className="attachments">
+              {files.map((f, i) => (
+                <span key={i} className="chip" title={f.name}>
+                  <span className="chip-ico">{Ico.clip}</span>
+                  <span className="chip-name">{f.name}</span>
+                  <button className="chip-x" title="Remove" onClick={() => removeFile(i)} disabled={sending}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="composer-box">
-            <button className="attach" title="Attach (coming soon)" disabled>{Ico.clip}</button>
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              accept=".pdf,.txt,.docx,.pptx,.xlsx,.xls,.csv,.jpg,.jpeg,.png"
+              style={{ display: 'none' }}
+              onChange={onPickFiles}
+            />
+            <button className="attach" title="Attach files (PDF, Word, Excel, PowerPoint, CSV, images)"
+                    onClick={() => fileRef.current?.click()} disabled={sending}>{Ico.clip}</button>
             <textarea
               ref={taRef}
               className="ta"
@@ -305,7 +355,8 @@ export default function App() {
               onKeyDown={onKeyDown}
               disabled={sending}
             />
-            <button className="send" onClick={() => submit()} disabled={sending || !input.trim()} title="Send">
+            <button className="send" onClick={() => submit()}
+                    disabled={sending || (!input.trim() && files.length === 0)} title="Send">
               {Ico.send}
             </button>
           </div>
