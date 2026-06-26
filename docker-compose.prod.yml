@@ -1,0 +1,48 @@
+# AI Agents Portal (HR Policy Generator + 5 more Lyzr agents) — production stack.
+#
+#   host nginx (TLS :7777)
+#     └── /ai-agents/ ──► frontend (nginx :8080) ──► 127.0.0.1:4778
+#                           └── /ai-agents/api/ ──► backend (gunicorn :8000) ──► 127.0.0.1:4774
+#
+# STATELESS: no database. The backend is a secure proxy to the Lyzr v3 inference
+# API; chat history lives in the browser (localStorage). All secrets (LYZR_API_KEY,
+# per-agent ids, CORS) live in backend/.env, injected at runtime, never baked in.
+#
+# The host nginx only needs to proxy /ai-agents/ to the frontend on 4778. The
+# container nginx handles the static-vs-API split internally via Docker DNS.
+# See NGINX-DEPLOY-GUIDE.md for the host nginx changes.
+#
+# Port assignments (loopback only, new + project-specific so they don't collide
+# with the scheme-compliance projects on 4769/4771/4772):
+#   4778 — frontend (container nginx serving SPA + proxying API)
+#   4774 — backend  (FastAPI via gunicorn/uvicorn) — exposed for direct debugging
+
+services:
+  backend:
+    build: ./backend
+    container_name: ai-agents-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env          # LYZR_API_KEY, per-agent ids, CORS_ALLOWED_ORIGINS, …
+    ports:
+      # Loopback only — reachable by the container nginx via Docker DNS (backend:8000)
+      # and from the host at 127.0.0.1:4774 for direct debugging.
+      - "127.0.0.1:4774:8000"
+    networks:
+      - ai-agents-net
+
+  frontend:
+    build: .
+    container_name: ai-agents-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Loopback only — the host nginx (TLS :7777) reverse-proxies /ai-agents/ here.
+      - "127.0.0.1:4778:8080"
+    networks:
+      - ai-agents-net
+
+networks:
+  ai-agents-net:
+    driver: bridge

@@ -29,8 +29,13 @@ function AgentRoute() {
   return <App key={slug} slug={slug} />
 }
 
+// In production the app is mounted under /ai-agents/ (vite.config.js sets base for
+// the build); basename keeps the router in sync. In dev base is '/', so basename
+// resolves to '' (root) and deep links like /hr-policy work unchanged.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '')
+
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
+  <BrowserRouter basename={basename}>
     <Routes>
       <Route path="/" element={<DefaultRedirect />} />
       <Route path="/:slug" element={<AgentRoute />} />

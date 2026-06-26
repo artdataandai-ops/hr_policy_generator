@@ -1,0 +1,9 @@
+# Root build context = the frontend image (build: .). Keep it lean and never ship
+# secrets or the backend into the SPA image.
+node_modules
+backend/
+dist
+.git
+*.md
+.env*
+memory/
