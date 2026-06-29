@@ -29,10 +29,12 @@ GROQ_URL = os.getenv("GROQ_URL", "https://api.groq.com/openai/v1/chat/completion
 
 _SYSTEM_PROMPT = (
     "You are a strict but lenient topic classifier for a customer-facing AI agent. "
-    "You are given the agent's ALLOWED SCOPE and a USER MESSAGE. Block ONLY messages "
-    "that are clearly and totally outside the scope (e.g. recipes, general trivia, "
-    "unrelated coding help). Allow greetings, clarifications, follow-ups, and anything "
-    "plausibly related — when in doubt, allow. "
+    "You are given the agent's ALLOWED SCOPE, the CONVERSATION SO FAR (optional), and "
+    "the LATEST USER MESSAGE. Judge whether the LATEST USER MESSAGE is in scope, taking "
+    "the conversation so far into account. A short reply that answers the agent's "
+    "previous question (e.g. a country, a name, a number, 'yes', 'India') is IN scope. "
+    "Block ONLY messages that are clearly and totally outside the scope (e.g. recipes, "
+    "general trivia, unrelated coding help). When in doubt, allow. "
     'Respond with ONLY JSON: {"in_scope": true} or {"in_scope": false}.'
 )
 
@@ -66,9 +68,13 @@ def _rule(slug: str) -> dict | None:
     return r if isinstance(r, dict) and r.get("scope") else None
 
 
-def check_scope(slug: str, message: str, has_files: bool = False) -> tuple[bool, str | None]:
+def check_scope(slug: str, message: str, has_files: bool = False,
+                context: str = "") -> tuple[bool, str | None]:
     """Return (allowed, refusal). allowed=True → proceed to the real agent.
-    allowed=False → return ``refusal`` to the user without calling the agent."""
+    allowed=False → return ``refusal`` to the user without calling the agent.
+    ``context`` is a compact transcript of recent turns so the guard judges
+    follow-ups in context (a bare reply like "India" answering the agent's
+    question stays in scope)."""
     if not _ENABLED:
         return True, None
 
@@ -90,7 +96,7 @@ def check_scope(slug: str, message: str, has_files: bool = False) -> tuple[bool,
         return True, None
 
     try:
-        verdict = _classify(rule["scope"], text)
+        verdict = _classify(rule["scope"], text, context)
     except Exception as e:  # network/HTTP/timeout → fail open
         log.warning("scope guard call failed for '%s' (%s); allowing through", slug, e)
         return True, None
@@ -100,10 +106,12 @@ def check_scope(slug: str, message: str, has_files: bool = False) -> tuple[bool,
     return True, None  # in-scope, or anything we couldn't parse → allow (lenient)
 
 
-def _classify(scope: str, message: str) -> str:
-    """Ask Groq llama-3.1-8b-instant whether the message is in scope. Returns raw text."""
+def _classify(scope: str, message: str, context: str = "") -> str:
+    """Ask Groq llama-3.1-8b-instant whether the latest message is in scope (in context).
+    Returns raw text."""
     import requests
-    body = f"ALLOWED SCOPE: {scope}\n\nUSER MESSAGE: {message}"
+    convo = f"CONVERSATION SO FAR:\n{context.strip()}\n\n" if context and context.strip() else ""
+    body = f"{convo}ALLOWED SCOPE: {scope}\n\nLATEST USER MESSAGE: {message}"
     r = requests.post(
         GROQ_URL,
         headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},

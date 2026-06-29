@@ -21,10 +21,11 @@ export const getAgent = (slug) => j(`/${slug}/agent`)
 // Chat with optional file attachments. Always multipart/form-data so the backend
 // can extract document text / pass images through. Don't set Content-Type — the
 // browser adds the multipart boundary itself.
-export const sendChat = (slug, message, sessionId, files = []) => {
+export const sendChat = (slug, message, sessionId, files = [], context = '') => {
   const fd = new FormData()
   fd.append('message', message ?? '')
   if (sessionId) fd.append('session_id', sessionId)
+  if (context) fd.append('context', context)        // recent turns → lets the scope guard judge follow-ups in context
   for (const f of files) fd.append('files', f, f.name)
   return j(`/${slug}/chat`, { method: 'POST', body: fd })
 }

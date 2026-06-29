@@ -79,6 +79,7 @@ async def chat(
     message: str = Form(""),
     session_id: str | None = Form(None),
     agent_id: str | None = Form(None),
+    context: str = Form(""),
     files: list[UploadFile] = File(default=[]),
 ):
     """Chat with an agent. multipart/form-data so the user can attach files.
@@ -123,7 +124,7 @@ async def chat(
 
     # Scope guard: block clearly off-topic messages before the real agent runs.
     # Returns the refusal in the normal chat shape (renders as a normal assistant reply).
-    allowed, refusal = guard.check_scope(slug, user_msg, has_files=bool(extracted))
+    allowed, refusal = guard.check_scope(slug, user_msg, has_files=bool(extracted), context=context)
     if not allowed:
         return {"response": refusal, "orchestration": [], "session_id": session}
 

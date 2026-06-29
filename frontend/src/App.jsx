@@ -169,6 +169,13 @@ export default function App({ slug }) {
     setFiles([])
 
     const sid = active.id
+    // Recent turns → the scope guard judges follow-ups in context (e.g. a bare "India"
+    // answering the agent's question stays in scope). Last 6 messages, capped ~1500 chars.
+    const recentContext = (active.messages || [])
+      .slice(-6)
+      .map((m) => `${m.role === 'user' ? 'user' : 'assistant'}: ${m.content || ''}`)
+      .join('\n')
+      .slice(-1500)
     const attachNames = attached.map((f) => f.name)
     const userMsg = { role: 'user', content: message, attachments: attachNames }
     patchSession(sid, (s) => ({
@@ -180,7 +187,7 @@ export default function App({ slug }) {
     setActiveStep(0)
 
     try {
-      const res = await sendChat(slug, message, sid, attached)
+      const res = await sendChat(slug, message, sid, attached, recentContext)
       patchSession(sid, (s) => ({
         ...s,
         messages: [...s.messages, { role: 'assistant', content: res.response, orchestration: res.orchestration }],
