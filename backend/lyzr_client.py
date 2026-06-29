@@ -35,6 +35,10 @@ LYZR_USER_ID = os.getenv("LYZR_USER_ID", "agents@arttechgroup.demo").strip()
 
 _AGENTS_JSON = os.path.join(os.path.dirname(__file__), "agents.json")
 
+# Default Lyzr read timeout (seconds). A manager fanning out to several sub-agents
+# needs room; agents.json can raise this per agent via a "timeout" field.
+DEFAULT_TIMEOUT = int(os.getenv("LYZR_TIMEOUT", "180"))
+
 
 def _build_registry() -> dict:
     """Load agents.json and resolve each agent's ids from the named env vars.
@@ -80,6 +84,9 @@ def _build_registry() -> dict:
             "manager_id": manager_id,
             "pipeline": pipeline,
             "allowlist": allowlist,
+            # Per-agent Lyzr read timeout (seconds). Long-running agents (e.g. autonomous
+            # plan/execute/evaluate loops) can override this in agents.json.
+            "timeout": int(cfg.get("timeout", DEFAULT_TIMEOUT)),
         }
     return registry
 
@@ -160,7 +167,7 @@ def generate(slug: str, message: str, session_id: str, agent_id: str | None = No
         LYZR_API_URL,
         headers={"x-api-key": LYZR_API_KEY, "Content-Type": "application/json"},
         json=payload,
-        timeout=180,  # the manager fans out to several sub-agents — give them room.
+        timeout=REGISTRY[slug]["timeout"],  # per-agent; long-running agents raise it in agents.json.
     )
     r.raise_for_status()
     data = r.json()

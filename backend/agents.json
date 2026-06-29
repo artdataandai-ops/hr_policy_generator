@@ -155,5 +155,336 @@
        "desc": "Handles access and permission requests for systems and applications.",
        "agent_env": "IT_ACCESS_REQUEST_AGENT_ID"}
     ]
+  },
+
+  "anti-glaze": {
+    "name": "Anti-Glaze Expert",
+    "short": "AG",
+    "brand_name": "Anti-Glaze Expert",
+    "subtitle": "Agent",
+    "description": "Gives blunt, sycophancy-free feedback — challenges assumptions and tells you what you need to hear rather than what you want to hear.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Summarize the Q3 sales report, highlighting key trends."},
+      {"icon": "bolt", "text": "Explain the impact of inflation on our current budget forecast."},
+      {"icon": "book", "text": "I need to schedule a meeting with John, but he's out of office. What now?"},
+      {"icon": "code", "text": "Clarify the steps for submitting an expense report. I'm new."}
+    ],
+    "manager_env": "ANTI_GLAZE_AGENT_ID",
+    "pipeline": []
+  },
+
+  "prompt-builder": {
+    "name": "Goal Prompt Builder",
+    "short": "PB",
+    "brand_name": "Goal Prompt Builder",
+    "subtitle": "Agent",
+    "description": "Turns a rough goal into a clear, well-structured prompt — clarifying intent, context, and constraints to get the best results from an AI agent.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Build a secure Flask API for user authentication and session management."},
+      {"icon": "bolt", "text": "Integrate Stripe payment processing into our existing Django e-commerce app."},
+      {"icon": "book", "text": "Help me create a new data display widget for our internal dashboard."},
+      {"icon": "code", "text": "Optimize database queries in our Ruby on Rails app, no code changes."}
+    ],
+    "manager_env": "PROMPT_BUILDER_AGENT_ID",
+    "pipeline": []
+  },
+
+  "card-dispute": {
+    "name": "Credit & Debit Card Dispute Resolution",
+    "short": "CD",
+    "brand_name": "Card Dispute Resolution",
+    "subtitle": "Orchestrator Agent",
+    "description": "Resolves credit and debit card disputes end-to-end — identifying the transaction, screening for fraud, summarizing the conversation, and de-escalating the customer.",
+    "suggestions": [
+      {"icon": "doc",  "text": "I need to dispute a recent charge on my credit card."},
+      {"icon": "bolt", "text": "The fraud screening showed 'not confirmed'. What happens next?"},
+      {"icon": "book", "text": "Dispute the Amazon transaction from June 25, 2026 for $45.99."},
+      {"icon": "code", "text": "I already asked to dispute this. Why are you asking again?"}
+    ],
+    "manager_env": "CARD_DISPUTE_ORCHESTRATOR_AGENT_ID",
+    "pipeline": [
+      {"key": "transaction-id", "name": "Transaction Identification Agent",
+       "desc": "Identifies the disputed transaction(s) from the customer's account history.",
+       "agent_env": "CARD_DISPUTE_TRANSACTION_ID_AGENT_ID"},
+      {"key": "fraud-screening", "name": "Fraud Screening Agent",
+       "desc": "Screens the disputed transaction for signs of fraud.",
+       "agent_env": "CARD_DISPUTE_FRAUD_SCREENING_AGENT_ID"},
+      {"key": "conversation-summary", "name": "Conversation Summarisation Agent",
+       "desc": "Summarizes the dispute conversation for the case record.",
+       "agent_env": "CARD_DISPUTE_CONVERSATION_SUMMARY_AGENT_ID"},
+      {"key": "de-escalation", "name": "Dispute De-escalation Agent",
+       "desc": "Manages customer tone and de-escalates the dispute interaction.",
+       "agent_env": "CARD_DISPUTE_DEESCALATION_AGENT_ID"}
+    ]
+  },
+
+  "brand-compliance": {
+    "name": "Brand Compliance & Governance Agent",
+    "short": "BC",
+    "brand_name": "Brand Compliance & Governance",
+    "subtitle": "Orchestrator Agent",
+    "description": "Checks content against brand rules and governance standards — extracting brand knowledge, evaluating compliance, recommending rewrites, and assembling a compliance report.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Evaluate provided web copy against brand guidelines; generate compliance report."},
+      {"icon": "bolt", "text": "Review attached whitepaper (PDF) for full brand, legal, and tone compliance."},
+      {"icon": "book", "text": "Assess short social media ad text for subtle brand alignment; report findings."},
+      {"icon": "code", "text": "Clarify the specific reasoning for the 'critical legal risk' finding in the report."}
+    ],
+    "manager_env": "BRAND_COMPLIANCE_ORCHESTRATOR_AGENT_ID",
+    "pipeline": [
+      {"key": "knowledge-extraction", "name": "Brand Knowledge Extraction Agent",
+       "desc": "Extracts brand knowledge and guidelines from source material.",
+       "agent_env": "BRAND_KNOWLEDGE_EXTRACTION_AGENT_ID"},
+      {"key": "rule-normalization", "name": "Brand Rule Normalization Agent",
+       "desc": "Normalizes brand rules into a consistent, checkable form.",
+       "agent_env": "BRAND_RULE_NORMALIZATION_AGENT_ID"},
+      {"key": "content-context", "name": "Content Context Analyzer Agent",
+       "desc": "Analyzes the content's context to apply the right rules.",
+       "agent_env": "BRAND_CONTENT_CONTEXT_AGENT_ID"},
+      {"key": "compliance-evaluation", "name": "Brand Compliance Evaluation Agent",
+       "desc": "Evaluates the content against normalized brand rules.",
+       "agent_env": "BRAND_COMPLIANCE_EVALUATION_AGENT_ID"},
+      {"key": "recommendation-rewrite", "name": "Recommendation & Rewrite Agent",
+       "desc": "Recommends fixes and rewrites content to meet brand standards.",
+       "agent_env": "BRAND_RECOMMENDATION_REWRITE_AGENT_ID"},
+      {"key": "report-assembly", "name": "Compliance Report Assembly Agent",
+       "desc": "Assembles the findings into a final brand compliance report.",
+       "agent_env": "BRAND_REPORT_ASSEMBLY_AGENT_ID"}
+    ]
+  },
+
+  "contract-analyzer": {
+    "name": "Legal Contract Clause Analyzer",
+    "short": "LC",
+    "brand_name": "Contract Clause Analyzer",
+    "subtitle": "Review Manager",
+    "description": "Reviews legal contracts clause by clause — extracting clauses, analyzing risk, benchmarking against market standards, tracking obligations, and summarizing findings.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Analyze vendor agreement SA-001. Prioritize risks and actionable insights."},
+      {"icon": "bolt", "text": "Compare key liability terms against market standards. Detail any deviations."},
+      {"icon": "book", "text": "Review this unique cross-border JV agreement. Highlight any analytical gaps."},
+      {"icon": "code", "text": "Summarize all high-risk provisions. Include clear recommendations for review."}
+    ],
+    "manager_env": "CONTRACT_REVIEW_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "clause-extractor", "name": "Clause Extractor",
+       "desc": "Extracts and categorizes the clauses from the contract.",
+       "agent_env": "CONTRACT_CLAUSE_EXTRACTOR_AGENT_ID"},
+      {"key": "risk-analyst", "name": "Risk Analyst",
+       "desc": "Analyzes each clause for legal and commercial risk.",
+       "agent_env": "CONTRACT_RISK_ANALYST_AGENT_ID"},
+      {"key": "market-standards", "name": "Market Standards Researcher",
+       "desc": "Benchmarks terms against prevailing market standards.",
+       "agent_env": "CONTRACT_MARKET_STANDARDS_AGENT_ID"},
+      {"key": "obligation-tracker", "name": "Obligation Tracker",
+       "desc": "Tracks obligations, deadlines, and deliverables in the contract.",
+       "agent_env": "CONTRACT_OBLIGATION_TRACKER_AGENT_ID"},
+      {"key": "summary-generator", "name": "Summary Generator",
+       "desc": "Generates a clear summary of the contract review findings.",
+       "agent_env": "CONTRACT_SUMMARY_GENERATOR_AGENT_ID"}
+    ]
+  },
+
+  "universal-banking": {
+    "name": "Universal Banking Customer Support Agent",
+    "short": "UB",
+    "brand_name": "Universal Banking Support",
+    "subtitle": "Manager Agent",
+    "description": "A single front door for retail banking support — routing customers across transactions, cards, disputes, loans, fraud, investments, complaints, KYC, compliance, and collections.",
+    "suggestions": [
+      {"icon": "doc",  "text": "What is my current savings account balance?"},
+      {"icon": "bolt", "text": "I suspect fraud and need to reset my credit card PIN."},
+      {"icon": "book", "text": "I have a serious issue regarding my banking experience."},
+      {"icon": "code", "text": "My electricity direct debit failed. Why, and can I schedule a new payment?"}
+    ],
+    "manager_env": "UNIVERSAL_BANKING_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "transaction-payment", "name": "Transaction & Payment Agent",
+       "desc": "Handles transaction and payment queries and issues.",
+       "agent_env": "UB_TRANSACTION_PAYMENT_AGENT_ID"},
+      {"key": "card-services", "name": "Card Services Agent",
+       "desc": "Handles card servicing — blocks, replacements, limits, and settings.",
+       "agent_env": "UB_CARD_SERVICES_AGENT_ID"},
+      {"key": "dispute-management", "name": "Dispute Management Agent",
+       "desc": "Manages transaction and card disputes.",
+       "agent_env": "UB_DISPUTE_MANAGEMENT_AGENT_ID"},
+      {"key": "loan-credit", "name": "Loan & Credit Agent",
+       "desc": "Handles loan and credit products, eligibility, and servicing.",
+       "agent_env": "UB_LOAN_CREDIT_AGENT_ID"},
+      {"key": "fraud-security", "name": "Fraud & Security Agent",
+       "desc": "Handles fraud reports and account security concerns.",
+       "agent_env": "UB_FRAUD_SECURITY_AGENT_ID"},
+      {"key": "investment-wealth", "name": "Investment & Wealth Agent",
+       "desc": "Handles investment and wealth-management queries.",
+       "agent_env": "UB_INVESTMENT_WEALTH_AGENT_ID"},
+      {"key": "complaint-resolution", "name": "Complaint Resolution Agent",
+       "desc": "Captures and resolves customer complaints.",
+       "agent_env": "UB_COMPLAINT_RESOLUTION_AGENT_ID"},
+      {"key": "kyc-onboarding", "name": "KYC & Onboarding Agent",
+       "desc": "Handles KYC verification and customer onboarding.",
+       "agent_env": "UB_KYC_ONBOARDING_AGENT_ID"},
+      {"key": "regulatory-compliance", "name": "Regulatory & Compliance Agent",
+       "desc": "Handles regulatory and compliance-related requests.",
+       "agent_env": "UB_REGULATORY_COMPLIANCE_AGENT_ID"},
+      {"key": "collections-overdues", "name": "Collections & Overdues Agent",
+       "desc": "Handles collections, overdue accounts, and repayment support.",
+       "agent_env": "UB_COLLECTIONS_OVERDUES_AGENT_ID"}
+    ]
+  },
+
+  "procurement-docs": {
+    "name": "Procurement Document Generator (RFP/RFQ)",
+    "short": "PD",
+    "brand_name": "Procurement Docs",
+    "subtitle": "Document Manager",
+    "description": "Generates procurement documents — creating and filling out RFQ and RFP forms from your requirements via specialized document sub-agents.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Generate an RFP for cloud services. My budget is $1M."},
+      {"icon": "bolt", "text": "Generate an RFQ document for IT hardware immediately."},
+      {"icon": "book", "text": "Create an RFQ for office supplies for Global Corp. Summary: pens, paper, etc. $5k-$10k."},
+      {"icon": "code", "text": "Create an RFP for a new HR system. Org: Tech Solutions, Budget: $200k. Create it."}
+    ],
+    "manager_env": "PROCUREMENT_DOCUMENT_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "document-creator", "name": "Document Creator Agent (RFQ + RFP)",
+       "desc": "Creates the base RFQ and RFP document structures.",
+       "agent_env": "PROCUREMENT_DOCUMENT_CREATOR_AGENT_ID"},
+      {"key": "rfq-fillup", "name": "RFQ Fillup Agent",
+       "desc": "Fills out the RFQ document from the procurement requirements.",
+       "agent_env": "PROCUREMENT_RFQ_FILLUP_AGENT_ID"},
+      {"key": "rfp-fillup", "name": "RFP Fillup Agent",
+       "desc": "Fills out the RFP document from the procurement requirements.",
+       "agent_env": "PROCUREMENT_RFP_FILLUP_AGENT_ID"}
+    ]
+  },
+
+  "resolution-intelligence": {
+    "name": "Customer Support Resolution Intelligence Orchestrator",
+    "short": "RI",
+    "brand_name": "Resolution Intelligence",
+    "subtitle": "Orchestrator Agent",
+    "description": "Adds intelligence to support resolutions — checking completeness, tracking commitments, detecting risk signals and repeat issues, and recommending the next best action.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Generate a comprehensive resolution analysis report for the transcript provided."},
+      {"icon": "bolt", "text": "Analyze transcript with no clear resolution or support agent commitments."},
+      {"icon": "book", "text": "Provide an integrated analysis of a complex multi-issue support transcript."},
+      {"icon": "code", "text": "Process this lengthy transcript and deliver a complete resolution intelligence report."}
+    ],
+    "manager_env": "RESOLUTION_INTELLIGENCE_ORCHESTRATOR_AGENT_ID",
+    "pipeline": [
+      {"key": "resolution-completeness", "name": "Resolution Completeness Agent",
+       "desc": "Assesses whether the customer's issue was fully resolved.",
+       "agent_env": "RI_RESOLUTION_COMPLETENESS_AGENT_ID"},
+      {"key": "commitment-tracking", "name": "Commitment Tracking Agent",
+       "desc": "Tracks commitments and promises made to the customer.",
+       "agent_env": "RI_COMMITMENT_TRACKING_AGENT_ID"},
+      {"key": "risk-signal", "name": "Risk Signal Detection Agent",
+       "desc": "Detects risk signals in the conversation.",
+       "agent_env": "RI_RISK_SIGNAL_AGENT_ID"},
+      {"key": "repeat-issue", "name": "Repeat Issue Detection Agent",
+       "desc": "Identifies repeat or recurring issues for the customer.",
+       "agent_env": "RI_REPEAT_ISSUE_AGENT_ID"},
+      {"key": "next-best-action", "name": "Next-Best-Action Recommendation Agent",
+       "desc": "Recommends the next best action based on the analysis.",
+       "agent_env": "RI_NEXT_BEST_ACTION_AGENT_ID"}
+    ]
+  },
+
+  "conversation-summary": {
+    "name": "Conversation Summary & Action Tracker",
+    "short": "CA",
+    "brand_name": "Summary & Action Tracker",
+    "subtitle": "Agent",
+    "description": "Summarizes a conversation and extracts the action items, owners, and follow-ups — turning a transcript into a clear, trackable record.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Analyze transcript: summary, actions, concerns, commitments, resolution."},
+      {"icon": "bolt", "text": "Process call transcript with unclear resolution and missing action details."},
+      {"icon": "book", "text": "Analyze brief transcript for summary, actions, concerns; avoid assumptions."},
+      {"icon": "code", "text": "Analyze complex customer support dialogue for all required elements."}
+    ],
+    "manager_env": "CONVERSATION_SUMMARY_AGENT_ID",
+    "pipeline": []
+  },
+
+  "post-conversation": {
+    "name": "Customer Support Post-Conversation Intelligence",
+    "short": "PC",
+    "brand_name": "Post-Conversation Intelligence",
+    "subtitle": "Manager Agent",
+    "description": "Runs post-conversation analysis on support interactions — QA scoring, summary and action tracking, and sentiment and insight analysis.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Generate intelligence report from a routine customer support transcript."},
+      {"icon": "bolt", "text": "Synthesize report from transcript with mixed customer sentiment."},
+      {"icon": "book", "text": "Generate report given one sub-agent provides an incomplete output."},
+      {"icon": "code", "text": "Produce concise intelligence report from detailed technical conversation."}
+    ],
+    "manager_env": "POST_CONVERSATION_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "qa-scoring", "name": "QA Scoring Agent",
+       "desc": "Scores the conversation against quality-assurance criteria.",
+       "agent_env": "POST_CONV_QA_SCORING_AGENT_ID"},
+      {"key": "summary-tracker", "name": "Conversation Summary & Action Tracker",
+       "desc": "Summarizes the conversation and tracks action items.",
+       "agent_env": "POST_CONV_SUMMARY_TRACKER_AGENT_ID"},
+      {"key": "sentiment-insight", "name": "Customer Support Sentiment & Insight Analyzer",
+       "desc": "Analyzes sentiment and extracts insights from the conversation.",
+       "agent_env": "POST_CONV_SENTIMENT_AGENT_ID"}
+    ]
+  },
+
+  "goal-autonomous": {
+    "name": "Goal-Driven Autonomous Agent",
+    "short": "GA",
+    "brand_name": "Goal-Driven Autonomous Agent",
+    "subtitle": "Goal Orchestrator",
+    "description": "Pursues a high-level goal autonomously — planning tasks, executing them, and evaluating progress against the goal in a loop.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Analyze Q3 sales data. Provide top 3 revenue drivers with supporting metrics."},
+      {"icon": "bolt", "text": "Draft a memo on project status."},
+      {"icon": "book", "text": "Create a market entry strategy. Goal: 1-page summary, 3 risks, 3 mitigations."},
+      {"icon": "code", "text": "Summarize key ethical considerations for AI deployment. Goal: A 500-word brief on top 5 ethical issues."}
+    ],
+    "manager_env": "GOAL_ORCHESTRATOR_AGENT_ID",
+    "timeout": 600,
+    "pipeline": [
+      {"key": "task-planner", "name": "Task Planner",
+       "desc": "Breaks the goal down into an ordered plan of tasks.",
+       "agent_env": "GOAL_TASK_PLANNER_AGENT_ID"},
+      {"key": "task-executor", "name": "Task Executor",
+       "desc": "Executes the planned tasks.",
+       "agent_env": "GOAL_TASK_EXECUTOR_AGENT_ID"},
+      {"key": "goal-evaluator", "name": "Goal Evaluator",
+       "desc": "Evaluates progress and results against the original goal.",
+       "agent_env": "GOAL_EVALUATOR_AGENT_ID"}
+    ]
+  },
+
+  "regulatory-compliance": {
+    "name": "Regulatory Compliance Assessment System",
+    "short": "RC",
+    "brand_name": "Regulatory Compliance Assessment",
+    "subtitle": "Compliance Manager",
+    "description": "Assesses regulatory compliance end-to-end — identifying applicable regulations, researching requirements, assessing current state, and planning remediation.",
+    "suggestions": [
+      {"icon": "doc",  "text": "Provide recent enforcement actions in financial services."},
+      {"icon": "bolt", "text": "Analyze recent GDPR enforcement trends and regional risk adjustments."},
+      {"icon": "book", "text": "Clarify recent SEC guidance; is it binding or interpretative?"},
+      {"icon": "code", "text": "What are the critical compliance focus areas for Q3 2026?"}
+    ],
+    "manager_env": "REGULATORY_COMPLIANCE_MANAGER_AGENT_ID",
+    "pipeline": [
+      {"key": "regulation-identifier", "name": "Regulation Identifier",
+       "desc": "Identifies the regulations applicable to the scenario.",
+       "agent_env": "REG_IDENTIFIER_AGENT_ID"},
+      {"key": "regulatory-researcher", "name": "Regulatory Researcher",
+       "desc": "Researches the detailed requirements of the identified regulations.",
+       "agent_env": "REG_RESEARCHER_AGENT_ID"},
+      {"key": "current-state-assessor", "name": "Current State Assessor",
+       "desc": "Assesses current practices against the regulatory requirements.",
+       "agent_env": "REG_CURRENT_STATE_AGENT_ID"},
+      {"key": "remediation-planner", "name": "Remediation Planner",
+       "desc": "Plans the remediation steps to close compliance gaps.",
+       "agent_env": "REG_REMEDIATION_PLANNER_AGENT_ID"}
+    ]
   }
 }
