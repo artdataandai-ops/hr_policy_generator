@@ -1,0 +1,78 @@
+{
+  "_settings": { "enabled": true, "timeout": 20 },
+
+  "hr-policy": {
+    "scope": "creating and explaining HR policies — leave, conduct, remote work, onboarding, grievance, device/social-media use, and related workplace guidance and compliance",
+    "refusal": "I can only help with creating and explaining HR policies. Tell me what kind of policy you need and I'll help draft it."
+  },
+
+  "support-sentiment": {
+    "scope": "analyzing customer-support conversations for sentiment, recurring themes, at-risk customers, and actionable insights from tickets, chats, or transcripts",
+    "refusal": "I can only analyze sentiment and insights from customer-support conversations. Please share a conversation, ticket, or transcript to analyze."
+  },
+
+  "hr-hiring": {
+    "scope": "hiring tasks — writing job descriptions, defining candidate evaluation criteria, and screening or scoring resumes against a role",
+    "refusal": "I can only help with hiring — job descriptions, evaluation criteria, and resume screening. How can I help with your hiring need?"
+  },
+
+  "sales-enablement": {
+    "scope": "creating sales enablement content — audience/persona research, messaging and value frameworks, sales copy, one-pagers, battlecards, and content quality review",
+    "refusal": "I can only help create sales enablement content (messaging, copy, one-pagers, battlecards). What sales content would you like to build?"
+  },
+
+  "rfp-proposal": {
+    "scope": "RFP and proposal response automation — parsing RFPs, drafting technical and commercial responses, compliance and risk checks, and response quality assurance",
+    "refusal": "I can only help with RFP and proposal responses. Share the RFP or the section you want me to work on."
+  },
+
+  "it-helpdesk": {
+    "scope": "IT support — troubleshooting hardware/software/network/account issues, searching the knowledge base, raising tickets, and handling access requests",
+    "refusal": "I can only help with IT support requests (troubleshooting, tickets, access, knowledge base). What IT issue can I help with?"
+  },
+
+  "card-dispute": {
+    "scope": "credit and debit card transaction disputes — identifying disputed transactions, fraud screening, dispute filing, conversation summaries, and de-escalation",
+    "refusal": "I can only help with credit/debit card transaction disputes. Which transaction would you like to dispute or ask about?"
+  },
+
+  "brand-compliance": {
+    "scope": "brand compliance and governance — checking content against brand guidelines, legal and tone compliance, recommending rewrites, and producing compliance reports",
+    "refusal": "I can only help with brand compliance and governance — checking content against brand guidelines and reporting issues. Share the content you'd like reviewed."
+  },
+
+  "contract-analyzer": {
+    "scope": "reviewing and analyzing legal contracts — extracting clauses, assessing risk, benchmarking against market standards, tracking obligations, and summarizing findings",
+    "refusal": "I can only help with legal contract review and clause analysis. Share the contract or clause you'd like analyzed."
+  },
+
+  "universal-banking": {
+    "scope": "retail banking customer support — accounts, transactions and payments, cards, disputes, loans and credit, fraud and security, investments, complaints, KYC/onboarding, regulatory queries, and collections",
+    "refusal": "I can only help with retail banking queries (accounts, cards, payments, loans, disputes, fraud, KYC, complaints). How can I help with your banking need?"
+  },
+
+  "procurement-docs": {
+    "scope": "generating procurement documents — creating and filling out RFQ and RFP forms from procurement requirements",
+    "refusal": "I can only help generate procurement documents (RFPs and RFQs). Tell me what you need to procure and the key details."
+  },
+
+  "resolution-intelligence": {
+    "scope": "analyzing customer-support resolutions from a transcript — resolution completeness, commitment tracking, risk-signal and repeat-issue detection, and next-best-action recommendations",
+    "refusal": "I can only analyze customer-support resolution transcripts (completeness, commitments, risks, next best action). Please share a support transcript."
+  },
+
+  "conversation-summary": {
+    "scope": "summarizing a customer-support conversation and extracting action items, concerns, commitments, and resolutions from a transcript or notes",
+    "refusal": "I can only summarize customer-support conversations and track their action items. Please paste a conversation or transcript to analyze."
+  },
+
+  "post-conversation": {
+    "scope": "post-conversation analysis of customer-support interactions — QA scoring, conversation summary and action tracking, and sentiment and insight analysis from a transcript",
+    "refusal": "I can only run post-conversation analysis on customer-support transcripts (QA scoring, summary, sentiment). Please share a conversation transcript."
+  },
+
+  "regulatory-compliance": {
+    "scope": "regulatory compliance assessment — identifying applicable regulations, researching requirements, assessing current-state compliance, and planning remediation",
+    "refusal": "I can only help with regulatory compliance assessment (regulations, requirements, gaps, remediation). What regulation or compliance area can I help with?"
+  }
+}

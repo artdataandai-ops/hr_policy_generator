@@ -24,6 +24,7 @@ except Exception:
 
 import lyzr_client
 import file_extract
+import guard
 
 # Uploaded files: keep individual files and the combined payload bounded.
 MAX_FILE_BYTES = 15 * 1024 * 1024   # 15 MB per file
@@ -119,6 +120,13 @@ async def chat(
     target = (agent_id or "").strip() or None
     if target and not lyzr_client.is_allowed(slug, target):
         raise HTTPException(403, "Agent not allowed.")
+
+    # Scope guard: block clearly off-topic messages before the real agent runs.
+    # Returns the refusal in the normal chat shape (renders as a normal assistant reply).
+    allowed, refusal = guard.check_scope(slug, user_msg, has_files=bool(extracted))
+    if not allowed:
+        return {"response": refusal, "orchestration": [], "session_id": session}
+
     try:
         return lyzr_client.generate(slug, final_msg, session, target, images=images)
     except PermissionError as e:

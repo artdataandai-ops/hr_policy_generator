@@ -150,9 +150,21 @@ def generate(slug: str, message: str, session_id: str, agent_id: str | None = No
     if not is_allowed(slug, target):
         raise PermissionError(f"agent_id '{target}' is not in the allowlist for '{slug}'.")
 
+    data = raw_call(target, message, session_id, REGISTRY[slug]["timeout"], images)
+    return {
+        "response": _clean(response_text(data)),
+        "orchestration": _extract_orchestration(slug, data),
+        "session_id": session_id,
+    }
+
+
+def raw_call(agent_id: str, message: str, session_id: str = "default",
+             timeout: int = DEFAULT_TIMEOUT, images: list[dict] | None = None) -> dict:
+    """Low-level Lyzr inference POST → parsed JSON dict. Raises on network/HTTP error.
+    Shared by generate() and the scope guard so both reuse the key/url/user id."""
     payload = {
         "user_id": LYZR_USER_ID,
-        "agent_id": target,
+        "agent_id": agent_id,
         "session_id": session_id,
         "message": message,
     }
@@ -167,19 +179,16 @@ def generate(slug: str, message: str, session_id: str, agent_id: str | None = No
         LYZR_API_URL,
         headers={"x-api-key": LYZR_API_KEY, "Content-Type": "application/json"},
         json=payload,
-        timeout=REGISTRY[slug]["timeout"],  # per-agent; long-running agents raise it in agents.json.
+        timeout=timeout,
     )
     r.raise_for_status()
-    data = r.json()
+    return r.json()
 
+
+def response_text(data: dict) -> str:
+    """Pull the assistant text out of a Lyzr response payload."""
     resp = data.get("response", data.get("message", data.get("answer", "")))
-    text = resp if isinstance(resp, str) else json.dumps(resp, indent=2)
-
-    return {
-        "response": _clean(text),
-        "orchestration": _extract_orchestration(slug, data),
-        "session_id": session_id,
-    }
+    return resp if isinstance(resp, str) else json.dumps(resp, indent=2)
 
 
 def _clean(text: str) -> str:
