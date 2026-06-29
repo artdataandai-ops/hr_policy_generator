@@ -178,7 +178,7 @@
     "short": "PB",
     "brand_name": "Goal Prompt Builder",
     "subtitle": "Agent",
-    "description": "Turns a rough goal into a clear, well-structured prompt — clarifying intent, context, and constraints to get the best results from an AI agent.",
+    "description": "Turns a rough idea into a complete, ready-to-run prompt for your AI coding agent — gathers your goal, stack, and success criteria, then hands you a prompt you can paste and walk away from.",
     "suggestions": [
       {"icon": "doc",  "text": "Build a secure Flask API for user authentication and session management."},
       {"icon": "bolt", "text": "Integrate Stripe payment processing into our existing Django e-commerce app."},

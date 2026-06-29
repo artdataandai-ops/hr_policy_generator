@@ -74,5 +74,10 @@
   "regulatory-compliance": {
     "scope": "regulatory compliance assessment — identifying applicable regulations, researching requirements, assessing current-state compliance, and planning remediation",
     "refusal": "I can only help with regulatory compliance assessment (regulations, requirements, gaps, remediation). What regulation or compliance area can I help with?"
+  },
+
+  "prompt-builder": {
+    "scope": "building a production-ready /goal prompt for Claude Code — describing a software project, app, or feature to build, and answering context questions (final outcome/goal, tech stack, current codebase state, working directory or repo, constraints, audience, and measurable success criteria), then generating or adjusting the prompt. Short context-gathering answers (a tech stack, a repo path, success criteria, 'yes/no') are in scope.",
+    "refusal": "I help build production-ready /goal prompts for Claude Code. Tell me what software project or feature you want to build, and I'll gather the details and write the prompt."
   }
 }
