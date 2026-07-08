@@ -152,7 +152,7 @@ def generate(slug: str, message: str, session_id: str, agent_id: str | None = No
 
     data = raw_call(target, message, session_id, REGISTRY[slug]["timeout"], images)
     return {
-        "response": _clean(response_text(data)),
+        "response": _extract_report(_clean(response_text(data))),
         "orchestration": _extract_orchestration(slug, data),
         "session_id": session_id,
     }
@@ -198,6 +198,39 @@ def _clean(text: str) -> str:
         t = re.sub(r"^```[a-zA-Z]*\n?", "", t)
         t = re.sub(r"\n?```$", "", t)
     return t.strip()
+
+
+# Report fields, in priority order, that an agent may hide inside a JSON envelope.
+_REPORT_PATHS = (("result", "final_report"), ("final_report",),
+                 ("result", "report"), ("report",))
+
+
+def _extract_report(text: str) -> str:
+    """Some agents (e.g. resolution-intelligence) return a JSON envelope like
+    ``{"status": ..., "result": {"final_report": "<markdown>", ...}}`` instead of the
+    markdown prose the portal renders. If so, pull out the human-readable report so the
+    UI shows a formatted document rather than a raw JSON blob.
+
+    Markdown responses (the common case) are returned untouched. JSON that has no known
+    report field is also returned as-is so nothing is ever hidden."""
+    t = text.strip()
+    if not (t.startswith("{") or t.startswith("[")):
+        return text  # ordinary markdown prose — leave it alone
+    try:
+        obj = json.loads(t)
+    except (ValueError, TypeError):
+        return text  # looked like JSON but isn't valid — pass through
+    for path in _REPORT_PATHS:
+        cur = obj
+        for key in path:
+            if isinstance(cur, dict) and key in cur:
+                cur = cur[key]
+            else:
+                cur = None
+                break
+        if isinstance(cur, str) and cur.strip():
+            return cur.strip()
+    return text  # JSON but no report field we recognise — surface it rather than blank
 
 
 def _extract_orchestration(slug: str, data: dict) -> list[dict]:
